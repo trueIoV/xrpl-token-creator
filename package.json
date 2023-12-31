@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "readline-sync": "^1.4.10",
+    "xrpl": "^2.14.0"
+  }
+}
