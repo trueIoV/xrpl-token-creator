@@ -151,7 +151,7 @@ async function setTrustLine(client, currencyCode, issuerAddress, receiverWallet,
 
     console.log("Submitting TrustSet transaction...");
     const result = await client.submitAndWait(signed.tx_blob);
-    console.log("TrustSet transaction result:", JSON.stringify(result));
+    console.log("TrustSet transaction result:", JSON.stringify(result, null, 2));
 
     return result;
 }
@@ -181,7 +181,7 @@ async function issueToken(client, currencyCode, issuerWallet, receiverAddress, a
 
     console.log("Submitting token issuance transaction...");
     const result = await client.submitAndWait(signed.tx_blob);
-    console.log("Token issuance transaction result:", JSON.stringify(result));
+    console.log("Token issuance transaction result:", JSON.stringify(result, null, 2));
 
     return result;
 }
@@ -211,7 +211,7 @@ async function setAccountFlags(client, wallet, setFlags, clearFlags) {
 
         console.log("Submitting AccountSet (SetFlag) transaction...");
         const result = await client.submitAndWait(signed.tx_blob);
-        console.log("AccountSet (SetFlag) transaction result:", JSON.stringify(result));
+        console.log("AccountSet (SetFlag) transaction result:", JSON.stringify(result, null, 2));
 
         results.push(result);
     }
@@ -237,7 +237,7 @@ async function setAccountFlags(client, wallet, setFlags, clearFlags) {
 
         console.log("Submitting AccountSet (ClearFlag) transaction...");
         const result = await client.submitAndWait(signed.tx_blob);
-        console.log("AccountSet (ClearFlag) transaction result:", JSON.stringify(result));
+        console.log("AccountSet (ClearFlag) transaction result:", JSON.stringify(result, null, 2));
 
         results.push(result);
     }
@@ -265,7 +265,7 @@ async function blackHoleIssuer(client, issuerWallet) {
         if (result.result.meta.TransactionResult === 'tesSUCCESS') {
             console.log('Regular key set to "black hole" address.');
         } else {
-            console.log(`Failed to set regular key. Result: ${JSON.stringify(result)}`);
+            console.log(`Failed to set regular key. Result: ${JSON.stringify(result, null, 2)}`);
         }
 
         // Disable the master key
@@ -279,18 +279,35 @@ async function blackHoleIssuer(client, issuerWallet) {
         signed = issuerWallet.sign(prepared);
 
         await ensureConnection(client); // Ensure connection
-        
+
         result = await client.submitAndWait(signed.tx_blob);
 
         // Check if disabling the master key was successful
         if (result.result.meta.TransactionResult === 'tesSUCCESS') {
             console.log('Master key disabled. Issuer address has been fully black holed.');
         } else {
-            console.log(`Failed to disable master key. Result: ${JSON.stringify(result)}`);
+            console.log(`Failed to disable master key. Result: ${JSON.stringify(result, null, 2)}`);
         }
     } catch (error) {
         console.error(`An error occurred: ${error.message}`);
     }
+}
+
+function logInfo(message) {
+    console.log(`INFO: ${message}`);
+}
+
+function logWarning(message) {
+    console.log(`WARNING: ${message}`);
+}
+
+function logError(message) {
+    console.log(`ERROR: ${message}`);
+}
+
+function logSectionHeader(title) {
+    console.log("\n#######################################################################\n");
+    console.log(`SECTION: ${title}`);
 }
 
 async function main() {
@@ -358,26 +375,26 @@ async function main() {
                 return;
             }
         }
-        console.log("");
-        console.log("#######################################################################");
-        console.log("");
-        console.log("#1");
-        console.log("The Default Ripple flag 'asfDefaultRipple' is an account setting that enables rippling on all incoming trust lines by default.");
-        console.log("Issuers MUST enable this flag for their customers to be able to send tokens to each other.");
-        console.log("It's best to enable it before setting up any trust lines or issuing any tokens.");
-        console.log("The Default Ripple setting of your account does not affect trust lines that you create.");
-        console.log("Only trust lines that others open to you.");
-        console.log("If you change the Default Ripple setting of your account, trust lines that were created before the change keep their existing No Ripple settings.");
-        console.log("You can use a TrustSet transaction to change the No Ripple setting of a trust line to match your address's new default.")
-        console.log("");
-        console.log("#2");
-        console.log("Authorized Trust Lines: (Optional)");
-        console.log("This setting (also called 'asfRequireAuth') limits your tokens to being held only by accounts you've explicitly approved.");
-        console.log("You cannot enable this setting if you already have any trust lines or offers for any token.");
-        console.log("Note: To use authorized trust lines, you must perform additional steps that are not shown in this tutorial.");
-        console.log("");
-        console.log("#######################################################################");
-        console.log("");
+
+        // Section 1: Default Ripple
+        logSectionHeader("Default Ripple");
+
+        logInfo("The Default Ripple flag 'asfDefaultRipple' is an account setting that enables rippling on all incoming trust lines by default.");
+        logInfo("Issuers MUST enable this flag for their customers to be able to send tokens to each other.");
+        logInfo("It's best to enable it before setting up any trust lines or issuing any tokens.");
+        logInfo("The Default Ripple setting of your account does not affect trust lines that you create.");
+        logInfo("Only trust lines that others open to you.");
+        logInfo("If you change the Default Ripple setting of your account, trust lines that were created before the change keep their existing No Ripple settings.");
+        logInfo("You can use a TrustSet transaction to change the No Ripple setting of a trust line to match your address's new default.");
+
+        // Section 2: Authorized Trust Lines
+        logSectionHeader("Authorized Trust Lines");
+
+        logInfo("This setting (also called 'asfRequireAuth') limits your tokens to being held only by accounts you've explicitly approved.");
+        logWarning("You cannot enable this setting if you already have any trust lines or offers for any token.");
+        logError("Note: To use authorized trust lines, you must perform additional steps that are not shown in this tutorial.");
+
+        console.log("\n#######################################################################\n");
 
         // Set or clear account flags for issuer
         if (readlineSync.keyInYN('Do you want to set or clear any account flags for the issuer?')) {
@@ -389,7 +406,7 @@ async function main() {
 
             if (setFlags.length > 0 || clearFlags.length > 0) {
                 const results = await setAccountFlags(client, issuerWallet, setFlags, clearFlags);
-                console.log('Account flags updated for issuer. Results:', results);
+                // console.log('Account flags updated for issuer. Results:', JSON.stringify(results, null, 2));
             } else {
                 console.log('No flags were set or cleared.');
             }
